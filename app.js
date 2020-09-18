@@ -35,7 +35,7 @@ app.use(require('express-session')({
 
 app.use(passport.initialize());
 app.use(passport.session());
-
+passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
@@ -53,6 +53,10 @@ app.get('/home', (req, res) => {
     res.redirect('/');
 });
 
+app.get('/secret', (req, res) => {
+    res.render('secret');
+});
+
 // Auth Routes
 
 app.get('/register', (req, res) => {
@@ -68,11 +72,25 @@ app.post('/register', (req, res) => {
             return res.redirect('/register');
         } else {
             passport.authenticate('local')(req, res, () => {
-                res.render('secret');
+                res.redirect('/secret');
             });
         }
     });
 });
+
+//login
+
+app.get('/login', (req, res) => {
+    res.render('login')
+});
+
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/secret',
+    failureRedirect: '/login'
+}), (req, res) => {
+    
+});
+
 
 
 app.listen(port, () => console.log(`Authentication app listening on port ${port}!`));
