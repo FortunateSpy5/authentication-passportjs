@@ -1,12 +1,17 @@
-const express = require('express'),
+const
+    express = require('express'),
     app = express(),
-    bodyParser = require('body-parser'),
+    mongoose = require('mongoose'),
     port = 3000,
-    mongoose = require('mongoose')
+    passport = require('passport'),
+    bodyParser = require('body-parser'),
+    User = require('./models/user'),
+    localStrategy = require('passport-local'),
+    passportLocalMongoose = require('passport-local-mongoose');
 
 
 // MONGOOSE CONNECT
-mongoose.connect('mongodb://localhost:27017/yelp_camp', {
+mongoose.connect('mongodb://localhost:27017/auth_app', {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
@@ -21,10 +26,53 @@ app.use(bodyParser.urlencoded({
 // SET EJS AS DEFAULT
 app.set('view engine', 'ejs');
 
+// PASSPORT
+app.use(require('express-session')({
+    secret: 'To be or not to be that is the question',
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+
+// ===============================================================
+// ROUTES
+// ===============================================================
 
 app.get('/', (req, res) => {
     res.render('home');
-})
+});
+
+app.get('/home', (req, res) => {
+    res.redirect('/');
+});
+
+// Auth Routes
+
+app.get('/register', (req, res) => {
+    res.render('register')
+});
+
+app.post('/register', (req, res) => {
+    User.register(new User({
+        username: req.body.username
+    }), req.body.password, (err, user) => {
+        if (err) {
+            console.log(err.message);
+            return res.redirect('/register');
+        } else {
+            passport.authenticate('local')(req, res, () => {
+                res.render('secret');
+            });
+        }
+    });
+});
 
 
-app.listen(port, () => console.log(`Authentication app listening on port ${port}!`))
+app.listen(port, () => console.log(`Authentication app listening on port ${port}!`));
