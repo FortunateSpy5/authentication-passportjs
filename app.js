@@ -53,7 +53,7 @@ app.get('/home', (req, res) => {
     res.redirect('/');
 });
 
-app.get('/secret', (req, res) => {
+app.get('/secret', isLoggedIn, (req, res) => {
     res.render('secret');
 });
 
@@ -87,10 +87,23 @@ app.get('/login', (req, res) => {
 app.post('/login', passport.authenticate('local', {
     successRedirect: '/secret',
     failureRedirect: '/login'
-}), (req, res) => {
-    
+}), (req, res) => {});
+
+//logout
+
+app.get('/logout', (req, res) => {
+    req.logout();
+    res.redirect('/');
 });
 
+// Logged in?
+
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/login');
+}
 
 
 app.listen(port, () => console.log(`Authentication app listening on port ${port}!`));
